@@ -17,6 +17,15 @@ namespace crowjourney {
     // Méthode appelée avant le traitement de la requête
     void JWTAuthMiddleware::before_handle(crow::request& req, crow::response& res, context& ctx)
     {
+        //console log
+		std::cout << "JWTAuthMiddleware::before_handle - Traitement de la requête: " << req.url << std::endl;
+
+        // Ne pas traiter les requêtes OPTIONS, laisser le middleware CORS s'en charger
+        if (req.method == crow::HTTPMethod::Options) {
+            std::cout << "JWTAuthMiddleware: requête OPTIONS ignorée" << std::endl;
+            return;
+        }
+
         // Ignorer certaines routes sans authentification 
         // (par exemple, login et création d'utilisateur)
         if (req.url == "/login" ||

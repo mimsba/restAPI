@@ -11,6 +11,7 @@
 #ifndef DISABLE_AUTH
 #include "JWTAuthMiddleware.h"
 #include "CookieParser.h"
+#include "CORSMiddleware.h"
 #define AUTH_ENABLED 1
 #else
 #define AUTH_ENABLED 0
@@ -85,7 +86,7 @@ namespace crowjourney {
 
     // Configuration des routes avec support pour les deux modes
 #if AUTH_ENABLED
-    void setup_routes(crow::App<crow::CookieParser, JWTAuthMiddleware>& app);
+    void setup_routes(crow::App<crow::CookieParser, crowjourney::JWTAuthMiddleware, crowjourney_cors::CORSMiddleware>& app);
 #else
     void setup_routes(crow::SimpleApp& app);
 #endif

@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import Header from './Components/Header.jsx';
 import Footer from './Components/Footer.jsx';
+import Login from './Components/Login.jsx';
+import Register from './Components/Register.jsx';
+import { useAuth } from './context/AuthContext.jsx';
 
 function App() {
     // État pour la section active (livres, utilisateurs, etc.)
     const [activeSection, setActiveSection] = useState('books');
 
+    // Utiliser un alias pour le "loading" d'authentification
+    const { user, isAuthenticated, loading: authLoading, token, logout } = useAuth();
+
     // État pour stocker les livres
     const [books, setBooks] = useState([]);
 
-    // État pour le chargement
-    const [loading, setLoading] = useState(false);
+    // État pour le chargement des données (renommé pour éviter le conflit)
+    const [dataLoading, setDataLoading] = useState(false);
 
     // État pour les erreurs
     const [error, setError] = useState(null);
@@ -20,16 +26,27 @@ function App() {
 
     // Fonction pour récupérer les livres depuis le serveur
     const fetchBooks = async () => {
-        setLoading(true);
+        setDataLoading(true);
 
         try {
-            const response = await fetch(`${API_URL}/books`);
+
+            // Assurez-vous que le token est disponible et correctement formaté
+            console.log("Token utilisé pour la requête:", token);
+
+            // Ajout du token d'authentification si disponible
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(`${API_URL}/books`, {
+                headers
+            });
+
+            console.log("Statut de la réponse:", response.status);
 
             if (!response.ok) {
                 const errorData = await response.json();
-
-                alert("PB avec fetchBooks");
-
                 throw new Error(errorData.error || 'Une erreur est survenue lors du chargement des livres');
             }
 
@@ -41,44 +58,13 @@ function App() {
             console.error("Erreur lors du chargement de l'API livre:", err.message);
             setError(err.message);
         } finally {
-            setLoading(false);
+            setDataLoading(false);
         }
     };
 
-    //// Fonction pour ajouter un nouveau livre
-    //const addBook = async (bookData) => {
-    //    setLoading(true);
-
-
-    //    try {
-    //        const response = await fetch(`${API_URL}/books`, {
-    //            method: 'POST',
-    //            headers: {
-    //                'Content-Type': 'application/json'
-    //            },
-    //            body: JSON.stringify(bookData)
-    //        });
-
-    //        if (!response.ok) {
-    //            const errorData = await response.json();
-    //            throw new Error(errorData.error || "Erreur lors de l'ajout du livre");
-    //        }
-
-    //        const newBook = await response.json();
-    //        setBooks([...books, newBook]);
-    //        setError(null);
-
-    //    } catch (err) {
-    //        console.error("Erreur lors de l'ajout du livre:", err.message);
-    //        setError(err.message);
-    //    } finally {
-    //        setLoading(false);
-    //    }
-    //};
-
     // Fonction pour ajouter un nouveau livre
     const addBook = async (bookData) => {
-        setLoading(true);
+        setDataLoading(true);
 
         // Ajouter ces logs pour le débogage
         console.log("Données envoyées:", bookData);
@@ -86,18 +72,21 @@ function App() {
         console.log("JSON envoyé:", JSON.stringify(bookData));
 
         try {
+            // Ajout du token d'authentification si disponible
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const response = await fetch(`${API_URL}/books`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers,
                 body: JSON.stringify(bookData)
             });
 
-            // Ajouter ce log pour voir le code de statut
             console.log("Code de statut:", response.status);
-
-            // Récupérer la réponse brute pour l'inspecter
             const rawResponse = await response.text();
             console.log("Réponse brute:", rawResponse);
 
@@ -112,7 +101,6 @@ function App() {
                 throw new Error(errorMessage);
             }
 
-            // Convertir la réponse textuelle en JSON
             const newBook = rawResponse ? JSON.parse(rawResponse) : {};
             setBooks([...books, newBook]);
             setError(null);
@@ -121,19 +109,25 @@ function App() {
             console.error("Erreur lors de l'ajout du livre:", err.message);
             setError(err.message);
         } finally {
-            setLoading(false);
+            setDataLoading(false);
         }
     };
 
-
     // Fonction pour supprimer un livre
     const deleteBook = async (bookId) => {
-        setLoading(true);
+        setDataLoading(true);
         console.log("Suppression du livre avec l'ID:", bookId);
         console.log(API_URL + "/books/" + bookId);
         try {
+            // Ajout du token d'authentification si disponible
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const response = await fetch(`${API_URL}/books/${bookId}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers
             });
 
             if (!response.ok) {
@@ -149,18 +143,54 @@ function App() {
             console.error("Erreur lors de la suppression du livre:", err.message);
             setError(err.message);
         } finally {
-            setLoading(false);
+            setDataLoading(false);
         }
     };
 
     // Utiliser useEffect pour charger les livres au chargement du composant
     useEffect(() => {
-        fetchBooks();
-    }, []);
+        if (isAuthenticated) {
+            fetchBooks();
+        }
+    }, [isAuthenticated]);
 
-    // Rendu conditionnel selon la section active
+    // Si l'authentification est en cours de chargement
+    if (authLoading) {
+        return <div>Chargement de l'authentification...</div>;
+    }
+
+    // Rendu pour les utilisateurs non authentifiés
+    if (!isAuthenticated) {
+        return (
+            <div className="App">
+                <Header />
+                <main className="container">
+                    <nav className="app-nav">
+                        <button
+                            className={activeSection === 'login' ? 'active' : ''}
+                            onClick={() => setActiveSection('login')}
+                        >
+                            Connexion
+                        </button>
+                        <button
+                            className={activeSection === 'register' ? 'active' : ''}
+                            onClick={() => setActiveSection('register')}
+                        >
+                            Inscription
+                        </button>
+                    </nav>
+
+                    {activeSection === 'login' && <Login />}
+                    {activeSection === 'register' && <Register />}
+                </main>
+                <Footer />
+            </div>
+        );
+    }
+
+    // Rendu conditionnel selon la section active pour les utilisateurs authentifiés
     const renderContent = () => {
-        if (loading) {
+        if (dataLoading) {
             return <p>Chargement en cours...</p>;
         }
 
@@ -181,7 +211,7 @@ function App() {
                                     <h3>{book.titre}</h3>
                                     <p>Auteur: {book.auteur}</p>
                                     <p>Année: {book.annee || 'Non spécifiée'}</p>
-                                    <p>Genre: {book.genre || 'Non spécifié'}</p>                                    
+                                    <p>Genre: {book.genre || 'Non spécifié'}</p>
                                     <p>ID: {book.id}</p>
                                     <button
                                         className="delete-button"
@@ -204,6 +234,10 @@ function App() {
         <div className="App">
             <Header />
             <main className="col-12 container border-top" >
+                <div className="user-info">
+                    <p>Connecté en tant que: {user.nom} ({user.email})</p>
+                    <button onClick={logout}>Se déconnecter</button>
+                </div>
                 <nav className="app-nav">
                     <button
                         className={activeSection === 'books' ? 'active' : ''}
@@ -211,7 +245,15 @@ function App() {
                     >
                         Livres
                     </button>
-                    {/* Ajoutez d'autres sections ici */}
+                    {/* Afficher le bouton Admin uniquement pour les utilisateurs avec ce rôle */}
+                    {user && user.role === 'admin' && (
+                        <button
+                            className={activeSection === 'admin' ? 'active' : ''}
+                            onClick={() => setActiveSection('admin')}
+                        >
+                            Administration
+                        </button>
+                    )}
                 </nav>
 
                 {renderContent()}

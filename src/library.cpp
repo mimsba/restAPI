@@ -356,12 +356,31 @@ namespace crowjourney {
     }
 
     // Gestionnaire pour les préflight OPTIONS (nécessaire pour CORS)(sans paramètres)
+    //crow::response handleOptions() {
+    //    auto response = crow::response(204);
+    //    response.add_header("Content-Type", "application/json; charset=utf-8");
+    //    addCorsHeaders(response);
+    //    return std::move(response);
+    //}
+
     crow::response handleOptions() {
+        // Point d'arrêt ici ⬇️
+        std::cout << "handleOptions() called!" << std::endl << std::flush;
+
         auto response = crow::response(204);
-        response.add_header("Content-Type", "application/json; charset=utf-8");
-        addCorsHeaders(response);
-        return std::move(response);
+        response.set_header("Content-Type", "application/json; charset=utf-8");
+
+        // Définir directement les en-têtes CORS au lieu d'utiliser la fonction additionnelle
+        response.set_header("Access-Control-Allow-Origin", "*");
+        response.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+        response.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+        // Vérifier que les en-têtes sont bien définis
+        std::cout << "CORS headers in OPTIONS: " << response.get_header_value("Access-Control-Allow-Origin") << std::endl << std::flush;
+
+        return response; // Essayer sans std::move()
     }
+
 
     // Gestionnaire pour les préflight OPTIONS (nécessaire pour CORS)(avec paramètre ID)
     crow::response handleOptionsWithId(int id) {
@@ -374,7 +393,7 @@ namespace crowjourney {
 
     // Configuration des routes pour la bibliothèque - versions avec et sans authentification
 #if AUTH_ENABLED
-	void setup_routes(crow::App<crow::CookieParser, JWTAuthMiddleware>& app) {
+	void setup_routes(crow::App<crow::CookieParser, crowjourney::JWTAuthMiddleware, crowjourney_cors::CORSMiddleware>& app) {
 #else
 	void setup_routes(crow::SimpleApp & app) {
 #endif

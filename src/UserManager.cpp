@@ -15,6 +15,7 @@
 #ifndef DISABLE_AUTH
 #include "JWTAuthMiddleware.h"
 #include "CookieParser.h"
+#include "CORSMiddleware.h"
 #define AUTH_ENABLED 1
 #else
 #define AUTH_ENABLED 0
@@ -244,6 +245,7 @@ namespace crowjourney {
 
     // POST /users - Créer un nouvel utilisateur
     crow::response registerUser(const crow::request& req) {
+        std::cout << "Requête d'enregistrement reçue: " << req.body << std::endl;
         auto& userManager = getUserManager();
 
         try {
@@ -306,16 +308,40 @@ namespace crowjourney {
     }
 
     // Gestionnaire pour les préflight OPTIONS (nécessaire pour CORS)
+    //crow::response handleUserOptions() {
+    //    auto response = crow::response(204);
+    //    response.add_header("Content-Type", "application/json; charset=utf-8");
+    //    addCorsHeaders(response);
+    //    return std::move(response);
+    //}
+
     crow::response handleUserOptions() {
         auto response = crow::response(204);
         response.add_header("Content-Type", "application/json; charset=utf-8");
+
+        std::cout << "AVANT addCorsHeaders dans OPTIONS: ";
+        for (const auto& header : response.headers) {
+            std::cout << header.first << "=" << header.second << "; ";
+        }
+        std::cout << std::endl;
+
         addCorsHeaders(response);
+
+        std::cout << "APRÈS addCorsHeaders dans OPTIONS: ";
+        for (const auto& header : response.headers) {
+            std::cout << header.first << "=" << header.second << "; ";
+        }
+        std::cout << std::endl;
+
         return std::move(response);
     }
 
     // Configuration des routes utilisateurs avec support pour les deux modes
 #if AUTH_ENABLED
-    void setup_user_routes(crow::App<crow::CookieParser, JWTAuthMiddleware>& app) {
+    void setup_user_routes(crow::App<crow::CookieParser, crowjourney::JWTAuthMiddleware, crowjourney_cors::CORSMiddleware>& app) {
+        // Ajouter une route OPTIONS pour gérer les préflight CORS
+        CROW_ROUTE(app, "/users")
+            .methods(crow::HTTPMethod::OPTIONS)(handleUserOptions);
 #else
     void setup_user_routes(crow::SimpleApp & app) {
         // Ajouter une route OPTIONS pour gérer les préflight CORS
@@ -333,7 +359,12 @@ namespace crowjourney {
 
     // Configuration des routes d'authentification avec support pour les deux modes
 #if AUTH_ENABLED
-    void setup_auth_routes(crow::App<crow::CookieParser, JWTAuthMiddleware>&app, JWTAuthMiddleware & jwtMiddleware) {
+    void setup_auth_routes(crow::App<crow::CookieParser, crowjourney::JWTAuthMiddleware, crowjourney_cors::CORSMiddleware>&app, JWTAuthMiddleware & jwtMiddleware) {
+
+		// Ajouter une route OPTIONS pour gérer les préflight CORS
+		CROW_ROUTE(app, "/login")
+			.methods(crow::HTTPMethod::OPTIONS)(handleUserOptions);
+
         CROW_ROUTE(app, "/login")
             .methods(crow::HTTPMethod::POST)([&jwtMiddleware](const crow::request& req) {
             auto& userManager = getUserManager();

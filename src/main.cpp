@@ -6,8 +6,6 @@
 // Définissez cette macro dans les options de compilation pour activer le mode sans authentification
 // Par défaut, le mode avec authentification est utilisé
 #ifndef DISABLE_AUTH
-#include "JWTAuthMiddleware.h"
-#include "CookieParser.h" // Inclure explicitement CookieParser
 #define AUTH_ENABLED 1
 #else
 #include <crow/middlewares/cors.h> // Pour le CORS dans le mode sans auth
@@ -19,23 +17,43 @@ namespace crowjourney {
     void initialize();
 
 #if AUTH_ENABLED
-    void setup_routes(crow::App<crow::CookieParser, JWTAuthMiddleware>& app);
-    void setup_user_routes(crow::App<crow::CookieParser, JWTAuthMiddleware>& app);
-    void setup_auth_routes(crow::App<crow::CookieParser, JWTAuthMiddleware>& app, JWTAuthMiddleware& jwtMiddleware);
+    void setup_routes(crow::App<crow::CookieParser, crowjourney_cors::CORSMiddleware, crowjourney::JWTAuthMiddleware>& app);
+    void setup_user_routes(crow::App<crow::CookieParser, crowjourney::JWTAuthMiddleware, crowjourney_cors::CORSMiddleware>& app);
+    void setup_auth_routes(crow::App<crow::CookieParser, crowjourney::JWTAuthMiddleware, crowjourney_cors::CORSMiddleware>& app, JWTAuthMiddleware& jwtMiddleware);
+    
 #else
     void setup_routes(crow::SimpleApp& app);
     void setup_user_routes(crow::SimpleApp& app);
     void setup_auth_routes(crow::SimpleApp& app);  // Sans paramètre jwtMiddleware
 #endif
-}
 
+    
+
+}
 
 int main() {
 #if AUTH_ENABLED
     std::cout << "Starting REST API server with authentication..." << std::endl;
 
     // Créer une application Crow avec JWT middleware
-    crow::App<crow::CookieParser, crowjourney::JWTAuthMiddleware> app;
+   // crow::App<crow::CookieParser, crowjourney::JWTAuthMiddleware> app;
+
+    crow::App<crow::CookieParser, crowjourney::JWTAuthMiddleware, crowjourney_cors::CORSMiddleware> app;
+
+    // Dans votre fonction main()
+// Ajouter juste après avoir créé l'application (pour tests)
+    CROW_ROUTE(app, "/test-options")
+        .methods(crow::HTTPMethod::OPTIONS)
+        ([](const crow::request& req) {
+        // Point d'arrêt ici ⬇️
+        std::cout << "Test OPTIONS route hit!" << std::endl << std::flush;
+        auto response = crow::response(204);
+        response.set_header("Access-Control-Allow-Origin", "*");
+        response.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        response.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        return response;
+            });
+
 
     // Initialiser la bibliothèque
     crowjourney::initialize();
