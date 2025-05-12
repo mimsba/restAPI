@@ -4,6 +4,12 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
 endif()
 
 cmake_minimum_required(VERSION 3.20)
+
+# Policy pour supprimer l'avertissement FindBoost
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+
 project(crowJourney VERSION 1.0)
 
 # Set C++ standard
@@ -51,7 +57,6 @@ endif()
 # Include directories
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
-    ${Boost_INCLUDE_DIRS}
     ${JWT_CPP_INCLUDE_DIR}
     ${OPENSSL_INCLUDE_DIR}
 )
@@ -67,7 +72,7 @@ add_library(crowJourney STATIC
 target_include_directories(crowJourney PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(crowJourney 
     PUBLIC
-    ${Boost_LIBRARIES} 
+    Boost::system  # Utilisation de la cible moderne Boost::system
     Threads::Threads
     OpenSSL::SSL
     OpenSSL::Crypto
@@ -84,7 +89,7 @@ if(TARGET_TO_BUILD STREQUAL "book_api_server")
     target_link_libraries(book_api_server 
         PRIVATE 
         crowJourney 
-        ${Boost_LIBRARIES} 
+        Boost::system  # Utilisation de la cible moderne Boost::system
         Threads::Threads
         OpenSSL::SSL
         OpenSSL::Crypto
@@ -116,8 +121,8 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
 )
 
 # Option pour désactiver l'authentification
-option(DISABLE_AUTH "Désactiver l'authentification pour le développement" ON)
-
+option(DISABLE_AUTH "Désactiver l'authentification pour le développement" OFF)
+# set(DISABLE_AUTH OFF CACHE BOOL "Désactiver l'authentification pour le développement" FORCE)
 if(DISABLE_AUTH)
     # Définir au niveau global pour s'assurer qu'il est appliqué partout
     add_compile_definitions(DISABLE_AUTH)
@@ -125,6 +130,9 @@ if(DISABLE_AUTH)
 else()
     message(STATUS "Authentification ACTIVÉE (mode production)")
 endif()
+
+# Afficher l'état explicite de DISABLE_AUTH
+message(STATUS "État actuel de DISABLE_AUTH: ${DISABLE_AUTH}")
 
 # Afficher des informations utiles pour le débogage
 message(STATUS "OpenSSL Include: ${OPENSSL_INCLUDE_DIR}")
