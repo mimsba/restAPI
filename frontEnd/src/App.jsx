@@ -208,11 +208,13 @@ function App() {
                         <ul className="books-list">
                             {books.map(book => (
                                 <li key={book.id} className="book-item">
-                                    <h3>{book.titre}</h3>
-                                    <p>Auteur: {book.auteur}</p>
-                                    <p>Année: {book.annee || 'Non spécifiée'}</p>
-                                    <p>Genre: {book.genre || 'Non spécifié'}</p>
-                                    <p>ID: {book.id}</p>
+                                    <div className="book-details">
+                                        <h3>{book.titre}</h3>
+                                        <p><strong>Auteur:</strong> {book.auteur}</p>
+                                        <p><strong>Année:</strong> {book.annee || 'Non spécifiée'}</p>
+                                        <p><strong>Genre:</strong> {book.genre || 'Non spécifié'}</p>
+                                        <p><strong>ID:</strong> {book.id}</p>
+                                    </div>
                                     <button
                                         className="delete-button"
                                         onClick={() => deleteBook(book.id)}
@@ -230,10 +232,11 @@ function App() {
         return <p>Sélectionnez une section</p>;
     };
 
+
     return (
         <div className="App">
             <Header />
-            <main className="col-12 container border-top" >
+            <main className="container border-top" >
                 <div className="user-info">
                     <p>Connecté en tant que: {user.nom} ({user.email})</p>
                     <button onClick={logout}>Se déconnecter</button>
@@ -256,69 +259,74 @@ function App() {
                     )}
                 </nav>
 
-                {renderContent()}
-
-                {/* Formulaire simple pour ajouter un livre */}
-                {activeSection === 'books' && (
-                    <div className="col-4 add-book-form mt-5">
-                        <h3>Ajouter un nouveau livre</h3>
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const formData = new FormData(e.target);
-                            addBook({
-                                titre: formData.get('titre'),
-                                auteur: formData.get('auteur'),
-                                annee: parseInt(formData.get('annee')) || 0,
-                                genre: formData.get('genre')
-                            });
-                            e.target.reset();
-                        }}>
-                            <div className="form-group">
-                                <label htmlFor="titre">Titre:</label>
-                                <input
-                                    type="text"
-                                    id="titre"
-                                    name="titre"
-                                    required
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="auteur">Auteur:</label>
-                                <input
-                                    type="text"
-                                    id="auteur"
-                                    name="auteur"
-                                    required
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="annee">Année:</label>
-                                <input
-                                    type="number"
-                                    id="annee"
-                                    name="annee"
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="genre">Genre:</label>
-                                <input
-                                    type="text"
-                                    id="genre"
-                                    name="genre"
-                                />
-                            </div>
-
-                            <button type="submit">Ajouter</button>
-                        </form>
+                <div className="main-layout">
+                    <div className="content-area">
+                        {renderContent()}
                     </div>
-                )}
+
+                    {/* Formulaire d'ajout de livre sur le côté */}
+                    {activeSection === 'books' && (
+                        <div className="add-book-form">
+                            <h3>Ajouter un nouveau livre</h3>
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                const formData = new FormData(e.target);
+                                addBook({
+                                    titre: formData.get('titre'),
+                                    auteur: formData.get('auteur'),
+                                    annee: parseInt(formData.get('annee')) || 0,
+                                    genre: formData.get('genre')
+                                });
+                                e.target.reset();
+                            }}>
+                                <div className="form-group">
+                                    <label htmlFor="titre">Titre:</label>
+                                    <input
+                                        type="text"
+                                        id="titre"
+                                        name="titre"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="auteur">Auteur:</label>
+                                    <input
+                                        type="text"
+                                        id="auteur"
+                                        name="auteur"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="annee">Année:</label>
+                                    <input
+                                        type="number"
+                                        id="annee"
+                                        name="annee"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="genre">Genre:</label>
+                                    <input
+                                        type="text"
+                                        id="genre"
+                                        name="genre"
+                                    />
+                                </div>
+
+                                <button type="submit">Ajouter</button>
+                            </form>
+                        </div>
+                    )}
+                </div>
             </main>
             <Footer />
         </div>
     );
+    
 }
 
 export default App;

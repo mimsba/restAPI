@@ -238,6 +238,127 @@ button, .button {
     margin-bottom: 1.5rem;
 }
 
-    .app-nav button {
-        margin-right: 0.5rem;
+.app-nav button {
+    margin-right: 0.5rem;
+}
+
+
+/* Styles pour la liste des livres */
+.books-container {
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.books-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.book-item {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+    .book-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
     }
+
+    .book-item h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+        font-size: 1.3rem;
+        border-bottom: 1px solid #444;
+        padding-bottom: 0.5rem;
+    }
+
+    .book-item p {
+        margin: 0.5rem 0;
+    }
+
+.book-details {
+    flex-grow: 1;
+}
+
+.delete-button {
+    margin-top: 1rem;
+    background-color: #d32f2f;
+    color: white;
+    width: 100%;
+}
+
+    .delete-button:hover {
+        background-color: #b71c1c;
+    }
+
+/* Amélioration du formulaire d'ajout de livre */
+.add-book-form {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin: 2rem auto;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+    .add-book-form h3 {
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        color: var(--primary-color);
+        text-align: center;
+    }
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #444;
+        border-radius: 4px;
+        background-color: #2a2a2a;
+        color: var(--text-color);
+    }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+/* Layout général */
+.main-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+@media (min-width: 992px) {
+    .main-layout {
+        grid-template-columns: 3fr 1fr;
+    }
+}
+
+/* État actif pour les boutons de navigation */
+.app-nav button.active {
+    background-color: var(--primary-color-hover);
+    font-weight: bold;
+}
+
